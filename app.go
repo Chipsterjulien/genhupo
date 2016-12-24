@@ -14,10 +14,10 @@ import (
 
 func main() {
 	numbPtr := flag.Int("num", 21, "number of file to create with random text")
-	amountPtr := flag.Int("amount", 5, "number of max amount")
+	amountPtr := flag.Int("amount", 5, "number amount")
 	startPtr := flag.Bool("start", false, "sentence beginning by «lorem ipsum dolor sit amet...»")
 	whatPtr := flag.String("what", "paras", "give number of paras|words|bytes|lists")
-	pathFile := flag.String("path", "", "path file")
+	pathFile := flag.String("path", ".", "path file")
 	flag.Parse()
 
 	numberOfProcess := runtime.NumCPU() * 2
@@ -54,20 +54,19 @@ func main() {
 }
 
 func testPath(pathFile *string) {
-	if err := notExists(pathFile); err != nil {
-		if er := os.MkdirAll(*pathFile, 0777); er != nil {
-			panic(er)
+	if !notExists(pathFile) {
+		if err := os.MkdirAll(*pathFile, 0777); err != nil {
+			panic(err)
 		}
 	}
 }
 
-func notExists(pathFile *string) error {
-	_, err := os.Stat(*pathFile)
-	if os.IsNotExist(err) {
-		return err
+func notExists(pathFile *string) bool {
+	if _, err := os.Stat(*pathFile); os.IsNotExist(err) {
+		return false
 	}
 
-	return nil
+	return true
 }
 
 func waitingTextJobs(numberOfProcess *int, textJobs chan []byte, finishDownload chan bool) {
@@ -91,7 +90,6 @@ func waitingWriteJobs(numberOfProcess *int, writeJobs chan []byte, finishText ch
 }
 
 func generateUrl(maxAmount *int, startByLorem *bool, what *string, downloadJob chan<- string) {
-	// what := "paras"
 	var start string
 	if *startByLorem {
 		start = "yes"
